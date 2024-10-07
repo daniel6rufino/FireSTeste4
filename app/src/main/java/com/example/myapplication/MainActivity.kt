@@ -1,6 +1,9 @@
 package com.example.myapplication
 
+import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,34 +18,40 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 
 class MainActivity : ComponentActivity() {
+    val db = Firebase.firestore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    App()
+                    App(db)
                 }
             }
         }
     }
 }
 
+
 @Composable
-@Composable
-fun App(){
-    var nome by remember {
+fun App(db: FirebaseFirestore){
+    var nome = remember {
         mutableStateOf("")
     }
-    var telefone by remember {
+    var telefone = remember {
         mutableStateOf("")
     }
     Column(
@@ -81,8 +90,8 @@ fun App(){
             Column(
             ) {
                 TextField(
-                    value = nome,
-                    onValueChange = { nome = it }
+                    value = nome.value,
+                    onValueChange = { nome.value = it }
                 )
             }
         }
@@ -99,8 +108,8 @@ fun App(){
             Column(
             ) {
                 TextField(
-                    value = telefone,
-                    onValueChange = { telefone = it }
+                    value = telefone.value,
+                    onValueChange = { telefone.value = it }
                 )
             }
         }
@@ -116,8 +125,67 @@ fun App(){
             Arrangement.Center
         ){
             Button(onClick = {
+                // Create a new user with a first and last name
+                val pessoas = hashMapOf(
+                    "nome" to nome,
+                    "telefone" to telefone,
+                )
+
+                // Add a new document with a generated ID
+                db.collection("Clientes").add(pessoas)
+                    .addOnSuccessListener { documentReference ->
+                        Log.d(TAG, "DocumentSnapshot written with ID: ${documentReference.id}")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w(TAG, "Error adding document", e)
+                    }
+
             }) {
                 Text(text = "Cadastrar")
+            }
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+
+            }
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+            ){
+                Column(
+                    Modifier
+                        .fillMaxWidth(0.3f)
+                ) {
+                    Text(text = "Nome:")
+                }
+            }
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+            ){
+                Column(
+
+                ) {
+                    db.collection("Clientes")
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            for (document in documents) {
+                                val lista = hashMapOf(
+                                    "nome" to "${document.data.get("nome")}",
+                                    "telefone" to "${document.data.get("telefone")}"
+                                )
+                                Log.d(TAG, "${document.id} => ${document.data}")
+                            }
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.w(TAG, "Error getting documents: ", exception)
+                        }
+                }
             }
         }
     }
