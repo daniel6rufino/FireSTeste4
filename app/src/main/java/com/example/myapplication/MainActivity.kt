@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    App(db)
+                    App(db, modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -47,7 +47,8 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun App(db: FirebaseFirestore){
+fun App(db: FirebaseFirestore,
+        modifier:Modifier){
     var nome = remember {
         mutableStateOf("")
     }
@@ -126,14 +127,15 @@ fun App(db: FirebaseFirestore){
         ){
             Button(onClick = {
                 // Create a new user with a first and last name
-                val pessoas = hashMapOf(
-                    "nome" to nome,
-                    "telefone" to telefone,
+                var pessoas = hashMapOf(
+                    "nome" to nome.value,
+                    "telefone" to telefone.value,
                 )
 
                 // Add a new document with a generated ID
                 db.collection("Clientes").add(pessoas)
                     .addOnSuccessListener { documentReference ->
+                        Log.w("teste", "teste")
                         Log.d(TAG, "DocumentSnapshot written with ID: ${documentReference.id}")
                     }
                     .addOnFailureListener { e ->
