@@ -160,9 +160,15 @@ fun App(db: FirebaseFirestore,
             ){
                 Column(
                     Modifier
-                        .fillMaxWidth(0.3f)
+                        .fillMaxWidth(0.5f)
                 ) {
                     Text(text = "Nome:")
+                }
+                Column(
+                    Modifier
+                        .fillMaxWidth(0.5f)
+                ) {
+                    Text(text = "Telefone:")
                 }
             }
 
@@ -170,9 +176,10 @@ fun App(db: FirebaseFirestore,
                 Modifier
                     .fillMaxWidth()
             ){
-                Column(
+                // Column(
 
-                ) {
+                // ) {
+                    val clientes = mutableStateOf<HashMap<String, String>>()
                     db.collection("Clientes")
                         .get()
                         .addOnSuccessListener { documents ->
@@ -181,13 +188,25 @@ fun App(db: FirebaseFirestore,
                                     "nome" to "${document.data.get("nome")}",
                                     "telefone" to "${document.data.get("telefone")}"
                                 )
-                                Log.d(TAG, "${document.id} => ${document.data}")
+                                clientes.add(lista)
                             }
                         }
                         .addOnFailureListener { exception ->
                             Log.w(TAG, "Error getting documents: ", exception)
                         }
-                }
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(clientes) { cliente ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.weight(0.5f)) {
+                                    Text(text = cliente["nome"] ?: "--")
+                                }
+                                Column(modifier = Modifier.weight(0.5f)) {
+                                    Text(text = cliente["telefone"] ?: "--")
+                                }
+                            }
+                        }
+                    }
+                // }
             }
         }
     }
